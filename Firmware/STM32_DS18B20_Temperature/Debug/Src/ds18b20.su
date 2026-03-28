@@ -5,4 +5,5 @@
 ../Src/ds18b20.c:58:9:Onewire_Reset	16	static
 ../Src/ds18b20.c:77:6:Onewire_Write	24	static
 ../Src/ds18b20.c:96:9:Onewire_Read	16	static
-../Src/ds18b20.c:119:7:DS18B20_Read_Temp	16	static
+../Src/ds18b20.c:117:6:DS18B20_Init	8	static
+../Src/ds18b20.c:128:7:DS18B20_Read_Temp	16	static

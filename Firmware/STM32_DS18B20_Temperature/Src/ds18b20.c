@@ -6,8 +6,8 @@
 #include "ds18b20.h"
 
 // --- CONFIG ---
-#define ONEWIRE_PORT GPIOA
-#define ONEWIRE_PIN  1   // PA1
+#define ONEWIRE_PORT GPIOA	// GPIOA
+#define ONEWIRE_PIN  0   	// PA0
 
 // --- DWT DELAY ---
 void DWT_Delay_Init(void) {
@@ -113,6 +113,15 @@ uint8_t Onewire_Read(void) {
     }
 
     return value;
+}
+void DS18B20_Init(void)
+{
+    // Enable GPIOA clock
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	SCB->CPACR |= (0xF << 20);  // Enable CP10 and CP11 (FPU)
+
+	// DWT for microsecound delay
+	DWT_Delay_Init();
 }
 
 // --- DS18B20 ---

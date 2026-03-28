@@ -1,0 +1,4 @@
+../Src/tds.c:11:6:TDS_ADC_Init	16	static
+../Src/tds.c:39:10:TDS_ADC_Read	4	static
+../Src/tds.c:48:7:TDS_GetVoltage	24	static
+../Src/tds.c:64:7:TDS_GetPPM	32	static

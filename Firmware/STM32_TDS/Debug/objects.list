@@ -1,0 +1,7 @@
+"./Src/main.o"
+"./Src/syscalls.o"
+"./Src/sysmem.o"
+"./Src/tds.o"
+"./Startup/startup_stm32f401retx.o"
+"./Third_Party/WS/timer.o"
+"./Third_Party/WS/uart.o"

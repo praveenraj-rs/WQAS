@@ -6,6 +6,7 @@ void DWT_Delay_us(uint32_t us);
 void DWT_Delay_Init(void);
 
 // DS18B20 functions
+void DS18B20_Init(void);
 float DS18B20_Read_Temp();
 
 // OneWire functions
