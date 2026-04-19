@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WQAS — Water Quality Assurance System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:          #f0f4f8;
+    --surface:     #ffffff;
+    --surface-2:   #f7fafc;
+    --border:      #dce6ef;
+    --border-soft: #eaf0f6;
+    --blue:        #1a5fa8;
+    --blue-light:  #e8f1fb;
+    --blue-mid:    #4a90d9;
+    --good:        #1a7a4a;
+    --good-bg:     #e8f6ef;
+    --warn:        #b05e00;
+    --warn-bg:     #fef3e2;
+    --bad:         #b91c1c;
+    --bad-bg:      #fde8e8;
+    --text:        #1a2633;
+    --text-2:      #4a6070;
+    --text-3:      #8fa8bb;
+    --font-body:   'Sora', sans-serif;
+    --font-serif:  'DM Serif Display', serif;
+    --font-mono:   'DM Mono', monospace;
+    --radius:      10px;
+    --shadow-sm:   0 1px 4px rgba(26,63,100,0.07), 0 0 0 1px rgba(26,63,100,0.05);
+    --shadow-md:   0 4px 16px rgba(26,63,100,0.09), 0 0 0 1px rgba(26,63,100,0.06);
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 1px 8px rgba(26,63,100,0.06);
+  }
+  .header-left { display: flex; align-items: center; gap: 18px; }
+  .logo-mark {
+    font-family: var(--font-serif);
+    font-size: 1.55rem;
+    color: var(--blue);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .divider-v { width: 1px; height: 24px; background: var(--border); }
+  .header-title { font-size: 0.77rem; font-weight: 500; color: var(--text-2); }
+  .header-right { display: flex; align-items: center; gap: 18px; }
+  #clock {
+    font-family: var(--font-mono); font-size: 0.78rem;
+    color: var(--text-2); font-weight: 500; letter-spacing: 1px;
+  }
+  .live-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--good-bg); border: 1px solid #c3e6d4;
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 0.68rem; font-weight: 600;
+    color: var(--good); letter-spacing: 0.8px; text-transform: uppercase;
+  }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--good);
+    animation: blink 1.6s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  #mode-chip {
+    font-family: var(--font-mono); font-size: 0.62rem; font-weight: 500;
+    padding: 4px 10px; border-radius: 20px;
+    background: #eef2f7; border: 1px solid var(--border);
+    color: var(--text-3); letter-spacing: 0.8px; text-transform: uppercase;
+  }
+
+  /* ── MAIN ── */
+  main { max-width: 1400px; margin: 0 auto; padding: 24px 28px 40px; }
+
+  /* ── STATUS BANNER ── */
+  #status-banner {
+    border-radius: var(--radius); padding: 14px 22px;
+    margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid; transition: all 0.4s ease;
+  }
+  #status-banner.good { background: var(--good-bg); border-color: #b8dfc9; }
+  #status-banner.warn { background: var(--warn-bg); border-color: #f0c888; }
+  #status-banner.bad  {
+    background: var(--bad-bg); border-color: #f0aaaa;
+    animation: soft-pulse 2s ease-in-out infinite;
+  }
+  @keyframes soft-pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(185,28,28,0.07); }
+    50%      { box-shadow: 0 0 0 8px rgba(185,28,28,0); }
+  }
+  .banner-left { display: flex; align-items: center; gap: 14px; }
+  .banner-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+  }
+  .good .banner-icon { background: #c3e6d4; }
+  .warn .banner-icon { background: #f8dea8; }
+  .bad  .banner-icon { background: #f8baba; }
+  .banner-text { font-weight: 600; font-size: 0.88rem; letter-spacing: 0.2px; }
+  .good .banner-text { color: var(--good); }
+  .warn .banner-text { color: var(--warn); }
+  .bad  .banner-text { color: var(--bad); }
+  .banner-sub { font-size: 0.71rem; color: var(--text-3); margin-top: 1px; }
+  #banner-ts { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-3); }
+
+  /* ── SENSOR GRID ── */
+  .sensor-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 14px; margin-bottom: 16px;
+  }
+  .sensor-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 22px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.25s, transform 0.2s;
+  }
+  .sensor-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .sensor-card-top {
+    display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px;
+  }
+  .sensor-label {
+    font-size: 0.63rem; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-3);
+  }
+  .sensor-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem; background: var(--blue-light); color: var(--blue); flex-shrink: 0;
+  }
+  .sensor-value {
+    font-family: var(--font-serif); font-size: 2.5rem;
+    color: var(--text); line-height: 1; margin-bottom: 2px;
+    transition: color 0.4s;
+  }
+  .sensor-unit { font-size: 0.67rem; color: var(--text-3); font-weight: 500; margin-bottom: 14px; }
+  .sensor-bar-track { height: 4px; background: var(--border-soft); border-radius: 2px; overflow: hidden; }
+  .sensor-bar-fill {
+    height: 100%; border-radius: 2px; background: var(--blue-mid);
+    transition: width 0.8s ease, background 0.4s;
+  }
+  .sensor-range {
+    display: flex; justify-content: space-between; margin-top: 4px;
+    font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-3);
+  }
+
+  /* ── AI CARDS ── */
+  .ai-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px; margin-bottom: 16px;
+  }
+  .ai-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px;
+    box-shadow: var(--shadow-sm); transition: box-shadow 0.25s, transform 0.2s;
+  }
+  .ai-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .ai-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-soft);
+  }
+  .ai-card-title {
+    font-size: 0.63rem; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-3);
+  }
+  .ai-model-tag {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    padding: 3px 9px; border-radius: 20px;
+    background: var(--blue-light); color: var(--blue); font-weight: 500;
+  }
+  .ai-result-value {
+    font-family: var(--font-serif); font-size: 1.85rem;
+    margin-bottom: 6px; transition: color 0.4s; line-height: 1.1;
+  }
+  .ai-result-sub { font-size: 0.7rem; color: var(--text-3); line-height: 1.55; }
+
+  .status-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 0.66rem; font-weight: 600; letter-spacing: 0.4px; margin-top: 10px;
+  }
+  .chip-good { background: var(--good-bg); color: var(--good); border: 1px solid #c3e6d4; }
+  .chip-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid #f0c888; }
+  .chip-bad  { background: var(--bad-bg);  color: var(--bad);  border: 1px solid #f0aaaa; }
+
+  /* ── WQI GAUGE ── */
+  .gauge-container { display: flex; align-items: center; gap: 16px; margin-top: 10px; }
+  .gauge-wrap { position: relative; width: 110px; height: 68px; flex-shrink: 0; }
+  .gauge-wrap svg { width: 100%; height: auto; }
+  .gauge-center-val {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    font-family: var(--font-serif); font-size: 1.3rem; color: var(--text);
+    white-space: nowrap; line-height: 1;
+  }
+  .gauge-legend { flex: 1; }
+  .gauge-legend-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.63rem; color: var(--text-3);
+    padding: 3px 0; border-bottom: 1px solid var(--border-soft);
+  }
+  .gauge-legend-row:last-child { border: none; }
+  .gauge-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+
+  /* ── FILTER ── */
+  .filter-meta { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .filter-pct-big { font-family: var(--font-serif); font-size: 1.85rem; color: var(--good); line-height: 1; transition: color 0.4s; }
+  .filter-track { height: 8px; background: var(--border-soft); border-radius: 4px; overflow: hidden; }
+  .filter-fill { height: 100%; border-radius: 4px; transition: width 1s ease, background 0.4s; }
+  .filter-labels {
+    display: flex; justify-content: space-between; margin-top: 5px;
+    font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-3);
+  }
+  .buf-wrap { margin-top: 12px; }
+  .buf-label { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-3); margin-bottom: 4px; }
+  .buf-track { height: 3px; background: var(--border-soft); border-radius: 2px; overflow: hidden; }
+  .buf-fill  { height: 100%; background: var(--blue-mid); border-radius: 2px; transition: width 0.5s ease; }
+
+  /* ── BOTTOM GRID ── */
+  .bottom-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+  .chart-card, .log-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm);
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-soft);
+  }
+  .card-title { font-size: 0.63rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); }
+  .card-count { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-3); }
+
+  .log-card { max-height: 360px; display: flex; flex-direction: column; }
+  .log-scroll { overflow-y: auto; flex: 1; }
+  .log-table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
+  .log-table th {
+    font-family: var(--font-mono); font-size: 0.59rem; font-weight: 500;
+    color: var(--text-3); letter-spacing: 1px; text-transform: uppercase;
+    padding: 0 8px 8px; text-align: left; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: var(--surface);
+  }
+  .log-table td {
+    padding: 7px 8px; font-family: var(--font-mono); font-size: 0.67rem;
+    color: var(--text-2); border-bottom: 1px solid var(--border-soft);
+  }
+  .log-table tr:hover td { background: var(--surface-2); }
+
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    font-size: 0.59rem; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .badge-good { background: var(--good-bg); color: var(--good); }
+  .badge-warn { background: var(--warn-bg); color: var(--warn); }
+  .badge-bad  { background: var(--bad-bg);  color: var(--bad);  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @media (max-width: 1100px) {
+    .sensor-grid { grid-template-columns: repeat(2, 1fr); }
+    .ai-grid     { grid-template-columns: 1fr; }
+    .bottom-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) { main { padding: 14px; } header { padding: 0 16px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-mark">WQAS</div>
+    <div class="divider-v"></div>
+    <div class="header-title">Water Quality Assurance System</div>
+  </div>
+  <div class="header-right">
+    <div id="clock">--:--:--</div>
+    <span id="mode-chip">Mock Mode</span>
+    <div class="live-chip"><div class="live-dot"></div>Live</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- STATUS BANNER -->
+  <div id="status-banner" class="good">
+    <div class="banner-left">
+      <div class="banner-icon">💧</div>
+      <div>
+        <div class="banner-text" id="banner-text">System Initializing</div>
+        <div class="banner-sub" id="banner-sub">Awaiting first sensor reading from device</div>
+      </div>
+    </div>
+    <div id="banner-ts">–</div>
+  </div>
+
+  <!-- SENSOR CARDS -->
+  <div class="sensor-grid">
+
+    <div class="sensor-card">
+      <div class="sensor-card-top">
+        <div class="sensor-label">Normal Temp · T1</div>
+        <div class="sensor-icon">🌡</div>
+      </div>
+      <div class="sensor-value" id="val-t1">–</div>
+      <div class="sensor-unit">°C &nbsp;·&nbsp; Ambient Water Temperature</div>
+      <div class="sensor-bar-track"><div class="sensor-bar-fill" id="bar-t1" style="width:0%"></div></div>
+      <div class="sensor-range"><span>0 °C</span><span>50 °C</span></div>
+    </div>
+
+    <div class="sensor-card">
+      <div class="sensor-card-top">
+        <div class="sensor-label">Hot Temp · T2</div>
+        <div class="sensor-icon" style="background:#fff3e0;color:#b05e00">🔥</div>
+      </div>
+      <div class="sensor-value" id="val-t2">–</div>
+      <div class="sensor-unit">°C &nbsp;·&nbsp; Heated Water Temperature</div>
+      <div class="sensor-bar-track"><div class="sensor-bar-fill" id="bar-t2" style="width:0%;background:#e8a020"></div></div>
+      <div class="sensor-range"><span>40 °C</span><span>90 °C</span></div>
+    </div>
+
+    <div class="sensor-card">
+      <div class="sensor-card-top">
+        <div class="sensor-label">TDS</div>
+        <div class="sensor-icon" style="background:#e8f6ef;color:#1a7a4a">⚗️</div>
+      </div>
+      <div class="sensor-value" id="val-tds">–</div>
+      <div class="sensor-unit">PPM &nbsp;·&nbsp; Total Dissolved Solids</div>
+      <div class="sensor-bar-track"><div class="sensor-bar-fill" id="bar-tds" style="width:0%"></div></div>
+      <div class="sensor-range"><span>0</span><span>1500 ppm</span></div>
+    </div>
+
+    <div class="sensor-card">
+      <div class="sensor-card-top">
+        <div class="sensor-label">Turbidity</div>
+        <div class="sensor-icon">🔬</div>
+      </div>
+      <div class="sensor-value" id="val-ntu">–</div>
+      <div class="sensor-unit">NTU &nbsp;·&nbsp; Water Clarity Index</div>
+      <div class="sensor-bar-track"><div class="sensor-bar-fill" id="bar-ntu" style="width:0%"></div></div>
+      <div class="sensor-range"><span>0</span><span>50 NTU</span></div>
+    </div>
+
+  </div>
+
+  <!-- AI RESULT CARDS -->
+  <div class="ai-grid">
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <div class="ai-card-title">Anomaly Detection</div>
+        <div class="ai-model-tag">Z-Score · IsoForest</div>
+      </div>
+      <div class="ai-result-value" id="ai-anomaly" style="color:var(--good)">Normal</div>
+      <div class="ai-result-sub" id="ai-anomaly-sub">Awaiting sensor data…</div>
+      <div id="ai-anomaly-chip"><span class="status-chip chip-good">✓ All Clear</span></div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <div class="ai-card-title">Water Quality Index</div>
+        <div class="ai-model-tag">Random Forest</div>
+      </div>
+      <div class="ai-result-value" id="ai-wqi" style="color:var(--text)">–</div>
+      <div class="gauge-container">
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 120 72" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 66 A48 48 0 0 1 108 66"
+                  fill="none" stroke="#dce6ef" stroke-width="9" stroke-linecap="round"/>
+            <path id="gauge-arc" d="M12 66 A48 48 0 0 1 108 66"
+                  fill="none" stroke="#1a7a4a" stroke-width="9"
+                  stroke-linecap="round" stroke-dasharray="151" stroke-dashoffset="151"
+                  style="transition: stroke-dashoffset 1s ease, stroke 0.5s;"/>
+          </svg>
+          <div class="gauge-center-val" id="gauge-num">0</div>
+        </div>
+        <div class="gauge-legend">
+          <div class="gauge-legend-row"><span><span class="gauge-dot" style="background:#1a7a4a"></span>Excellent</span><span>80–100</span></div>
+          <div class="gauge-legend-row"><span><span class="gauge-dot" style="background:#1a5fa8"></span>Good</span><span>60–79</span></div>
+          <div class="gauge-legend-row"><span><span class="gauge-dot" style="background:#b05e00"></span>Fair</span><span>40–59</span></div>
+          <div class="gauge-legend-row"><span><span class="gauge-dot" style="background:#b91c1c"></span>Bad</span><span>0–39</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <div class="ai-card-title">Filter Life Prediction</div>
+        <div class="ai-model-tag">LSTM</div>
+      </div>
+      <div class="filter-meta">
+        <div>
+          <div class="filter-pct-big" id="filter-pct-big">–%</div>
+          <div class="ai-result-sub" style="margin-top:3px">Estimated remaining life</div>
+        </div>
+        <div id="ai-filter-chip"><span class="status-chip chip-good">Healthy</span></div>
+      </div>
+      <div class="filter-track">
+        <div class="filter-fill" id="filter-fill" style="width:0%;background:var(--good)"></div>
+      </div>
+      <div class="filter-labels"><span>← Replace</span><span>Healthy →</span></div>
+      <div class="buf-wrap">
+        <div class="buf-label" id="buf-label">LSTM Buffer: 0 / 10</div>
+        <div class="buf-track"><div class="buf-fill" id="buf-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CHART + LOG -->
+  <div class="bottom-grid">
+
+    <div class="chart-card">
+      <div class="card-header">
+        <div class="card-title">Sensor Trend — Last 30 Readings</div>
+        <div class="card-count" id="reading-count">0 readings</div>
+      </div>
+      <canvas id="trendChart" height="88"></canvas>
+    </div>
+
+    <div class="log-card">
+      <div class="card-header">
+        <div class="card-title">Event Log</div>
+        <div class="card-count" id="log-count">0 events</div>
+      </div>
+      <div class="log-scroll">
+        <table class="log-table">
+          <thead><tr>
+            <th>Time</th><th>TDS</th><th>NTU</th><th>Status</th>
+          </tr></thead>
+          <tbody id="log-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+// ─── CHART ─────────────────────────────────────
+const ctx = document.getElementById('trendChart').getContext('2d');
+const trendChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [
+      { label: 'TDS (ppm)', data: [], borderColor: '#1a5fa8', backgroundColor: 'rgba(26,95,168,0.06)', tension: 0.4, pointRadius: 2, fill: true, yAxisID: 'y' },
+      { label: 'Turbidity (NTU)', data: [], borderColor: '#1a7a4a', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderDash: [5,3], yAxisID: 'y2' },
+      { label: 'WQI Score', data: [], borderColor: '#b05e00', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderDash: [3,3], yAxisID: 'y3' }
+    ]
+  },
+  options: {
+    responsive: true, animation: { duration: 500 },
+    plugins: { legend: { labels: { color: '#8fa8bb', font: { family: 'DM Mono', size: 10 }, boxWidth: 14, boxHeight: 2, padding: 16 } } },
+    scales: {
+      x:  { ticks: { color: '#8fa8bb', font: { family: 'DM Mono', size: 9 }, maxTicksLimit: 8 }, grid: { color: '#eaf0f6' } },
+      y:  { position: 'left',  ticks: { color: '#1a5fa8', font: { family: 'DM Mono', size: 9 } }, grid: { color: '#eaf0f6' }, title: { display: true, text: 'TDS', color: '#1a5fa8', font: { size: 9, family: 'DM Mono' } } },
+      y2: { position: 'right', ticks: { color: '#1a7a4a', font: { family: 'DM Mono', size: 9 } }, grid: { display: false }, title: { display: true, text: 'NTU', color: '#1a7a4a', font: { size: 9, family: 'DM Mono' } } },
+      y3: { display: false }
+    }
+  }
+});
+
+// ─── HELPERS ───────────────────────────────────
+function pct(val, min, max) { return Math.min(100, Math.max(0, ((val - min) / (max - min)) * 100)); }
+
+function scoreColor(score) {
+  if (score > 79) return '#1a7a4a';
+  if (score > 59) return '#1a5fa8';
+  if (score > 39) return '#b05e00';
+  return '#b91c1c';
+}
+
+function statusCls(status) {
+  const s = (status || '').toUpperCase();
+  if (s.includes('ANOM') || s.includes('SERVICE') || s.includes('BAD') || s.includes('REPLACE NOW')) return 'bad';
+  if (s.includes('FAIR') || s.includes('SOON')) return 'warn';
+  return 'good';
+}
+
+function setGauge(score) {
+  const arc = document.getElementById('gauge-arc');
+  const num = document.getElementById('gauge-num');
+  arc.style.strokeDashoffset = 151 - (score / 100) * 151;
+  arc.style.stroke = scoreColor(score);
+  num.textContent = Math.round(score);
+}
+
+// ─── CLOCK ─────────────────────────────────────
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-IN', { hour12: false });
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ─── POLL ──────────────────────────────────────
+let logRows = [];
+
+async function fetchData() {
+  try {
+    const [latest, hist, status] = await Promise.all([
+      fetch('/api/latest').then(r => r.json()),
+      fetch('/api/history').then(r => r.json()),
+      fetch('/api/status').then(r => r.json())
+    ]);
+
+    if (!latest.t1) return;
+
+    // ── Sensors ──
+    document.getElementById('val-t1').textContent = latest.t1;
+    document.getElementById('val-t2').textContent = latest.t2;
+    document.getElementById('val-tds').textContent = latest.tds;
+    document.getElementById('val-ntu').textContent = latest.ntu;
+    document.getElementById('bar-t1').style.width = pct(latest.t1, 0, 50) + '%';
+    document.getElementById('bar-t2').style.width = pct(latest.t2, 40, 90) + '%';
+    document.getElementById('bar-ntu').style.width = pct(latest.ntu, 0, 50) + '%';
+    const tBar = document.getElementById('bar-tds');
+    tBar.style.width = pct(latest.tds, 0, 1500) + '%';
+    tBar.style.background = latest.tds > 1000 ? '#b91c1c' : latest.tds > 600 ? '#b05e00' : '#1a7a4a';
+
+    // ── Anomaly ──
+    const isAnom = latest.anomaly === 'ANOMALY';
+    document.getElementById('ai-anomaly').textContent = isAnom ? 'Anomaly Detected' : 'Normal';
+    document.getElementById('ai-anomaly').style.color = isAnom ? '#b91c1c' : '#1a7a4a';
+    document.getElementById('ai-anomaly-sub').textContent = isAnom
+      ? 'Sensor spike flagged by Z-score or Isolation Forest — inspect hardware.'
+      : 'All readings within expected operating range. No irregularities.';
+    document.getElementById('ai-anomaly-chip').innerHTML = isAnom
+      ? `<span class="status-chip chip-bad">⚠ Anomaly</span>`
+      : `<span class="status-chip chip-good">✓ All Clear</span>`;
+
+    // ── WQI ──
+    const wqiScore = latest.wqi_score || 0;
+    document.getElementById('ai-wqi').textContent = latest.wqi || '–';
+    document.getElementById('ai-wqi').style.color = scoreColor(wqiScore);
+    setGauge(wqiScore);
+
+    // ── Filter ──
+    const fpct = latest.filter_pct ?? 0;
+    const fstatus = latest.filter_status || '–';
+    const fpctBig = document.getElementById('filter-pct-big');
+    fpctBig.textContent = fpct + '%';
+    fpctBig.style.color = fpct > 60 ? '#1a7a4a' : fpct > 30 ? '#b05e00' : '#b91c1c';
+    const fFill = document.getElementById('filter-fill');
+    fFill.style.width = fpct + '%';
+    fFill.style.background = fpct > 60 ? '#1a7a4a' : fpct > 30 ? '#b05e00' : '#b91c1c';
+    const fCls = fpct > 60 ? 'chip-good' : fpct > 30 ? 'chip-warn' : 'chip-bad';
+    document.getElementById('ai-filter-chip').innerHTML =
+      `<span class="status-chip ${fCls}">${fstatus}</span>`;
+    const bufPct = (status.buffer_fill / status.seq_len) * 100;
+    document.getElementById('buf-fill').style.width = bufPct + '%';
+    document.getElementById('buf-label').textContent =
+      `LSTM Buffer: ${status.buffer_fill} / ${status.seq_len}`;
+
+    // ── Banner ──
+    const finalCls = statusCls(latest.final_status);
+    const banner = document.getElementById('status-banner');
+    banner.className = finalCls;
+    const icons = { good: '💧', warn: '⚠️', bad: '🚨' };
+    const msgs  = {
+      good: { text: `System Status: ${latest.final_status}`, sub: 'Water quality is within acceptable parameters.' },
+      warn: { text: `Advisory: ${latest.final_status}`, sub: 'Attention required — review current sensor readings.' },
+      bad:  { text: `Alert: ${latest.final_status}`, sub: 'Immediate action required — water quality is compromised.' }
+    };
+    banner.querySelector('.banner-icon').textContent = icons[finalCls];
+    document.getElementById('banner-text').textContent = msgs[finalCls].text;
+    document.getElementById('banner-sub').textContent  = msgs[finalCls].sub;
+    document.getElementById('banner-ts').textContent   = latest.timestamp;
+
+    // ── Chart ──
+    if (hist.length) {
+      trendChart.data.labels = hist.map(h => h.time);
+      trendChart.data.datasets[0].data = hist.map(h => h.tds);
+      trendChart.data.datasets[1].data = hist.map(h => h.ntu);
+      trendChart.data.datasets[2].data = hist.map(h => h.wqi_score);
+      trendChart.update('none');
+      document.getElementById('reading-count').textContent = hist.length + ' readings';
+    }
+
+    // ── Log ──
+    const bc = finalCls === 'bad' ? 'badge-bad' : finalCls === 'warn' ? 'badge-warn' : 'badge-good';
+    logRows.unshift(`<tr>
+      <td>${latest.timestamp}</td>
+      <td>${latest.tds}</td>
+      <td>${latest.ntu}</td>
+      <td><span class="badge ${bc}">${latest.final_status}</span></td>
+    </tr>`);
+    if (logRows.length > 60) logRows.pop();
+    document.getElementById('log-body').innerHTML = logRows.join('');
+    document.getElementById('log-count').textContent = logRows.length + ' events';
+    document.getElementById('mode-chip').textContent =
+      status.mock_mode ? 'Mock Mode' : 'Hardware Live';
+
+  } catch(e) { console.warn('Poll error:', e); }
+}
+
+fetchData();
+setInterval(fetchData, 2000);
+</script>
+</body>
+</html>
