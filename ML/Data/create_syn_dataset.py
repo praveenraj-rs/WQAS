@@ -25,7 +25,7 @@ for _ in range(500):  # generate 500 samples
     data.append([temp, tds, ntu, label])
 
 df = pd.DataFrame(data, columns=["temp", "tds", "ntu", "label"])
-#df.to_csv("train_syn_water_quality.csv", index=False)
-df.to_csv("test_syn_water_quality.csv", index=False)
+df.to_csv("train_syn_water_quality.csv", index=False)
+#df.to_csv("test_syn_water_quality.csv", index=False)
 
 print("Dataset created!")
