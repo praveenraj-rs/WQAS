@@ -5,15 +5,15 @@ import joblib
 
 
 #  LOAD DATASET
-df = pd.read_csv("syn_water_quality.csv")
+df = pd.read_csv("../Data/train_syn_water_quality.csv")
 
 
 # FILTER NORMAL DATA
 # Use GOOD + NORMAL only
-df_filtered = df[df["label"].isin(["GOOD", "NORMAL"])]
+df_filtered = df[df["label"].isin(["GOOD", "NORMAL","BAD"])]
 
 print("Total samples:", len(df))
-print("Filtered samples (GOOD + NORMAL):", len(df_filtered))
+print("Filtered samples (GOOD + NORMAL + BAD):", len(df_filtered))
 
 # SELECT FEATURES
 X = df_filtered[["tds", "ntu", "temp"]].values

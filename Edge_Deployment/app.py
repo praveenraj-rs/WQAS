@@ -15,10 +15,10 @@ from datetime import datetime
 app = Flask(__name__)
 
 # CONFIG
-SERIAL_PORT = '/dev/ttyUSB0'
+SERIAL_PORT = '/dev/ttyACM1'
 BAUD_RATE = 9600
 SEQ_LEN = 10
-MOCK_MODE = True  # Set False when hardware connected
+MOCK_MODE = False  # Set False when hardware connected
 MOCK_STATE = "NORMAL" # GOOD, NORMAL, BAD, ANOMALY
 
 # GLOBAL STATE
@@ -229,20 +229,50 @@ def mock_serial_loop():
             time.sleep(5)
 # REAL SERIAL READER
 
+# def serial_loop():
+#     while True:
+#         try:
+#             ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
+#             print(f"✅ Serial connected: {SERIAL_PORT}")
+#             while True:
+#                 line = ser.readline().decode().strip()
+#                 if not line:
+#                     continue
+#                 data = json.loads(line)
+#                 process_reading(
+#                     data["t1"], data["t2"],
+#                     data["tds"], data["ntu"]
+#                 )
+#         except Exception as e:
+#             print(f" Serial error: {e}. Retrying in 5s...")
+#             time.sleep(5)
+
+
 def serial_loop():
     while True:
         try:
             ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
             print(f"✅ Serial connected: {SERIAL_PORT}")
+
             while True:
                 line = ser.readline().decode().strip()
                 if not line:
                     continue
+
                 data = json.loads(line)
+
+                # Process data
                 process_reading(
                     data["t1"], data["t2"],
                     data["tds"], data["ntu"]
                 )
+
+                # ✅ SEND WQI BACK TO ARDUINO
+                wqi_to_send = latest_data["wqi"]  # EXCELLENT / GOOD / BAD etc.
+                ser.write((wqi_to_send + "\n").encode())
+
+                print(f"➡️ Sent to Arduino: {wqi_to_send}")
+
         except Exception as e:
             print(f" Serial error: {e}. Retrying in 5s...")
             time.sleep(5)
